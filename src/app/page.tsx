@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState } from "react";
@@ -22,9 +21,21 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-pink-200 to-blue-200 p-4">
+      {/* Componente de Perfil */}
+      <div className="text-center mb-8">
+        <img
+          src="/images/your-photo.jpg" // Substitua pela sua imagem
+          alt="User Avatar"
+          className="w-32 h-32 rounded-full mx-auto mb-4"
+        />
+        <h1 className="text-3xl font-bold text-primary mb-2">John Doe</h1> {/* Substitua pelo nome */}
+        <p className="text-lg text-secondary">Calculadora de Idade do Bebê</p>
+      </div>
+
+      {/* Card para o cálculo */}
       <Card className="max-w-md w-full text-center">
         <CardContent>
-          <h1 className="text-2xl font-bold mb-4">Idade do Bebê</h1>
+          <h2 className="text-2xl font-bold mb-4">Idade do Bebê</h2>
           <Input
             type="date"
             value={birthDate}
