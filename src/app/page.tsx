@@ -33,11 +33,25 @@ export default function Home() {
     },
   });
 
-  const themeColors = {
-    default: "bg-blue-100 border-blue-400",
-    pink: "bg-pink-100 border-pink-400",
-    green: "bg-green-100 border-green-400",
-  };
+  // Defina as cores válidas
+const validColors = ["default", "pink", "green"] as const;
+type Color = typeof validColors[number];  // O tipo "Color" agora só pode ser "default", "pink" ou "green"
+
+// Defina a cor selecionada, com um valor que será uma chave válida
+let selectedColor: Color = "default";  // Pode ser "default", "pink", ou "green"
+
+// Defina o objeto de cores
+const themeColors: Record<Color, string> = {
+  default: "#ffffff",  // Exemplo de cor
+  pink: "#ff69b4",
+  green: "#32cd32",
+};
+
+// Use selectedColor com segurança
+const color = themeColors[selectedColor];
+
+// Agora, quando você usar selectedColor, o TypeScript garantirá que o valor seja válido
+console.log(color);  // A cor correspondente será retornada
 
   function calculate() {
     setIsCalculating(true);
