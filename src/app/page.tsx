@@ -1,25 +1,14 @@
-'use client'
+'use client';
 
-import React from 'react';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import React, { useState, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  differenceInDays,
-  parse,
-  format,
-  differenceInHours,
-  differenceInMinutes,
-  differenceInMilliseconds,
-  addYears
-} from "date-fns";
-import { useDropzone } from "react-dropzone";
-import html2canvas from "html2canvas";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useState, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { differenceInDays, parse, format, differenceInHours, differenceInMinutes, differenceInMilliseconds, addYears } from 'date-fns';
+import { useDropzone } from 'react-dropzone';
+import html2canvas from 'html2canvas';
 import { FaRedo } from 'react-icons/fa';
 
 export default function Home() {
