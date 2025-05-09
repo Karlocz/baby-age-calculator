@@ -11,47 +11,66 @@ import {
   differenceInHours,
   differenceInMinutes,
   differenceInMilliseconds,
-  addYears,
-  isValid
+  addYears
 } from "date-fns";
 import { useDropzone } from "react-dropzone";
 import html2canvas from "html2canvas";
+import { Calendar } from "@/components/ui/calendar";
+import { ptBR } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "@radix-ui/react-icons";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const [birthDate, setBirthDate] = useState("");
+  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
   const [result, setResult] = useState("");
   const [name, setName] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<any>(null);
   const [gender, setGender] = useState<"male" | "female">("male");
+  const [messageIndex, setMessageIndex] = useState(0);
   const cardRef = useRef(null);
 
-  const onDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles[0]) {
-      setImage(URL.createObjectURL(acceptedFiles[0]));
-    }
+  const funMessages = [
+    "Cada risada é um pedacinho do céu!",
+    "Seu sorriso ilumina o mundo!",
+    "Tempo voa com tanta fofura!",
+    "Cada segundo é um presente com você!"
+  ];
+
+  const faithMessages = [
+    "Presente de Deus 💖",
+    "Deus abençoe cada passo!",
+    "Crescendo sob o olhar do Senhor.",
+    "Pequeno milagre em nossos braços."
+  ];
+
+  const allMessages = [...funMessages, ...faithMessages];
+
+  const randomMessage = () =>
+    allMessages[Math.floor(Math.random() * allMessages.length)];
+
+  const onDrop = (acceptedFiles: any) => {
+    setImage(URL.createObjectURL(acceptedFiles[0]));
   };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: { "image/*": [] },
+    accept: {
+      "image/*": []
+    },
   });
 
   function calculate() {
-    const date = parse(birthDate, "yyyy-MM-dd", new Date());
-
-    if (!isValid(date)) {
-      setResult("❌ Data inválida. Use o formato AAAA-MM-DD.");
-      return;
-    }
+    if (!birthDate) return;
 
     const now = new Date();
-    const days = differenceInDays(now, date);
+    const days = differenceInDays(now, birthDate);
     const weeks = Math.floor(days / 7);
     const months = Math.floor(days / 30.44);
-    const hours = differenceInHours(now, date);
-    const minutes = differenceInMinutes(now, date);
+    const hours = differenceInHours(now, birthDate);
+    const minutes = differenceInMinutes(now, birthDate);
 
-    const firstBirthday = addYears(date, 1);
+    const firstBirthday = addYears(birthDate, 1);
     const timeToOneYearMs = differenceInMilliseconds(firstBirthday, now);
     const timeToOneYear = new Date(timeToOneYearMs);
 
@@ -60,6 +79,7 @@ export default function Home() {
     setResult(
       `Idade: ${days} dias, ${weeks} semanas, ${months} meses, ${hours} horas, ${minutes} minutos.\n⏳ ${timeLeft}`
     );
+    setMessageIndex(Math.floor(Math.random() * allMessages.length));
   }
 
   function exportCard() {
@@ -70,6 +90,14 @@ export default function Home() {
       link.href = canvas.toDataURL("image/png");
       link.click();
     });
+  }
+
+  function generateNewMessage() {
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * allMessages.length);
+    } while (newIndex === messageIndex);
+    setMessageIndex(newIndex);
   }
 
   return (
@@ -91,8 +119,14 @@ export default function Home() {
             </h1>
 
             {name && (
-              <p className="text-xl font-semibold mb-4">
+              <p className="text-xl font-semibold mb-2">
                 {name} {gender === "female" ? "🧸" : "🍼"}
+              </p>
+            )}
+
+            {result && (
+              <p className="text-base italic text-gray-700 mb-4">
+                “{allMessages[messageIndex]}”
               </p>
             )}
 
@@ -115,7 +149,7 @@ export default function Home() {
                 <div className="flex justify-center mb-2">
                   <img
                     src={image}
-                    alt={`Foto de ${name || "bebê"}`}
+                    alt="Foto do Bebê"
                     className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
                   />
                 </div>
@@ -124,43 +158,69 @@ export default function Home() {
               )}
             </div>
 
-            <Input
-              type="date"
-              placeholder="Data de Nascimento"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="w-full p-2 border rounded-md mb-4"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !birthDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {birthDate ? format(birthDate, "dd/MM/yyyy") : "Data de nascimento"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={birthDate}
+                  onSelect={setBirthDate}
+                  locale={ptBR}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
 
             <Button className="mt-4 w-full bg-blue-500 text-white" onClick={calculate}>
               Calcular Idade
             </Button>
 
             {result && (
-              <pre className="mt-4 text-md font-medium whitespace-pre-wrap text-left bg-white/70 p-2 rounded-md">
-                {result}
-              </pre>
+              <>
+                <pre className="mt-4 text-md font-medium whitespace-pre-wrap text-left bg-white/70 p-2 rounded-md">
+                  {result}
+                </pre>
+
+                <Button
+                  variant="outline"
+                  className="mt-2 w-full"
+                  onClick={generateNewMessage}
+                >
+                  Nova Mensagem ✨
+                </Button>
+              </>
             )}
 
             <div className="mt-4 space-x-4">
-              <label className="inline-flex items-center gap-1">
+              <label>
                 <input
                   type="radio"
                   name="gender"
                   value="male"
                   checked={gender === "male"}
                   onChange={() => setGender("male")}
-                />
+                />{" "}
                 Menino
               </label>
-              <label className="inline-flex items-center gap-1">
+              <label>
                 <input
                   type="radio"
                   name="gender"
                   value="female"
                   checked={gender === "female"}
                   onChange={() => setGender("female")}
-                />
+                />{" "}
                 Menina
               </label>
             </div>
