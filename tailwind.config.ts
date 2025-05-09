@@ -1,11 +1,15 @@
-
-import type { Config } from 'tailwindcss'
-
-const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{html,js,ts,tsx}", // Adapte para onde seus arquivos .tsx ou .jsx estão localizados
+  ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#ff5722', // Exemplo de cor primária
+        secondary: '#4caf50', // Exemplo de cor secundária
+      },
+    },
   },
   plugins: [],
 }
-export default config;
