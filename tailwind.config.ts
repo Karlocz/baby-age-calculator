@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{html,js,ts,tsx}", // Adapte para onde seus arquivos .tsx ou .jsx estão localizados
+    "./src/**/*.{html,js,ts,tsx}", // Certifique-se de que os arquivos TSX/JSX estejam inclusos aqui
   ],
   theme: {
     extend: {
