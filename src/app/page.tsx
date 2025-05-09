@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { differenceInDays, parseISO } from "date-fns";
-import { useDropzone } from "react-dropzone"; // Importando o react-dropzone
+import { differenceInDays, parseISO, isValid } from "date-fns";
+import { useDropzone } from "react-dropzone";
 
 export default function Home() {
   const [birthDate, setBirthDate] = useState("");
@@ -25,6 +25,12 @@ export default function Home() {
 
   function calculate() {
     const date = parseISO(birthDate);
+    
+    if (!isValid(date)) {
+      setResult("Data de nascimento inválida. Tente novamente.");
+      return;
+    }
+
     const now = new Date();
     const days = differenceInDays(now, date);
     const weeks = Math.floor(days / 7);
@@ -38,11 +44,12 @@ export default function Home() {
         gender === "female" ? "bg-pink-200" : "bg-blue-200"
       } transition-colors duration-500`} // Mudança de cor de fundo baseada no gênero
     >
-      <Card className="max-w-md w-full text-center shadow-lg rounded-lg">
+      <Card className="max-w-md w-full text-center shadow-lg rounded-lg p-6">
         <CardContent>
           <h1 className="text-3xl font-bold mb-4">Idade do Bebê</h1>
+          
+          {/* Campo para nome do bebê */}
           <div className="mb-4">
-            {/* Campo para nome do bebê */}
             <Input
               type="text"
               placeholder="Nome do Bebê"
