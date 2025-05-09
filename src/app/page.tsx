@@ -1,12 +1,20 @@
 'use client'
 
-import React, { useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { differenceInDays, parseISO, isValid } from "date-fns";
+import {
+  differenceInDays,
+  parse,
+  format,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInMilliseconds,
+  addYears
+} from "date-fns"; // Ensure this import is here
 import { useDropzone } from "react-dropzone";
-import html2canvas from "html2canvas"; // 👈 Importando a lib
+import html2canvas from "html2canvas";
 
 export default function Home() {
   const [birthDate, setBirthDate] = useState("");
@@ -14,8 +22,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [image, setImage] = useState<any>(null);
   const [gender, setGender] = useState<"male" | "female">("male");
-
-  const cardRef = useRef<HTMLDivElement>(null); // 👈 Ref para capturar o cartão
+  const cardRef = useRef(null);
 
   const onDrop = (acceptedFiles: any) => {
     setImage(URL.createObjectURL(acceptedFiles[0]));
@@ -27,122 +34,134 @@ export default function Home() {
   });
 
   function calculate() {
-    const date = parseISO(birthDate);
-    if (!isValid(date)) {
-      setResult("Data de nascimento inválida. Tente novamente.");
-      return;
-    }
+    const date = parse(birthDate, "dd/MM/yyyy", new Date());
     const now = new Date();
     const days = differenceInDays(now, date);
     const weeks = Math.floor(days / 7);
     const months = Math.floor(days / 30.44);
-    setResult(`Dias: ${days}, Semanas: ${weeks}, Meses: ${months}`);
+    const hours = differenceInHours(now, date);
+    const minutes = differenceInMinutes(now, date);
+
+    const firstBirthday = addYears(date, 1);
+    const timeToOneYearMs = differenceInMilliseconds(firstBirthday, now); // Corrected
+    const timeToOneYear = new Date(timeToOneYearMs);
+
+    const timeLeft = `${Math.floor(timeToOneYearMs / (1000 * 60 * 60 * 24))} dias, ${timeToOneYear.getUTCHours()} horas e ${timeToOneYear.getUTCMinutes()} minutos para 1º aniversário.`;
+
+    setResult(
+      `Idade: ${days} dias, ${weeks} semanas, ${months} meses, ${hours} horas, ${minutes} minutos.\n⏳ ${timeLeft}`
+    );
   }
 
-  async function downloadCard() {
+  function exportCard() {
     if (!cardRef.current) return;
-
-    const canvas = await html2canvas(cardRef.current);
-    const dataUrl = canvas.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = `${name || "cartao-bebe"}.png`;
-    link.click();
+    html2canvas(cardRef.current).then((canvas) => {
+      const link = document.createElement("a");
+      link.download = `${name || "bebe"}-cartao.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
   }
 
   return (
     <main
-      className={`flex min-h-screen items-center justify-center p-4 ${
-        gender === "female" ? "bg-pink-200" : "bg-blue-200"
-      } transition-colors duration-500`}
+      className={`flex min-h-screen items-center justify-center p-4 relative overflow-hidden ${
+        gender === "female" ? "bg-pink-100" : "bg-blue-100"
+      }`}
     >
-      <Card className="max-w-md w-full text-center shadow-lg rounded-lg p-6">
-        <CardContent>
-          {/* 👇 Ref envolta de tudo que será exportado como imagem */}
-          <div ref={cardRef} className="bg-white p-4 rounded-lg">
+      <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[length:20px_20px] opacity-20 z-0" />
+      <div className="relative z-10" ref={cardRef}>
+        <Card
+          className={`max-w-md w-full text-center shadow-2xl border-4 p-4 rounded-3xl transition-all duration-300 ${
+            gender === "female" ? "border-pink-400 shadow-pink-300" : "border-blue-400 shadow-blue-300"
+          } bg-white/80 backdrop-blur`}
+        >
+          <CardContent>
+            <h1 className="text-3xl font-bold mb-2">
+              {gender === "female" ? "Idade da Bebê 💖👧" : "Idade do Bebê 💙👦"}
+            </h1>
+
             {name && (
               <p className="text-xl font-semibold mb-4">
-                Nome do Bebê: <span className="text-black">{name}</span>
+                {name} {gender === "female" ? "🧸" : "🍼"}
               </p>
             )}
 
-            {image && (
-              <div className="flex justify-center mb-4">
-                <img
-                  src={image}
-                  alt="Foto do Bebê"
-                  className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
-                />
-              </div>
+            <div className="mb-4">
+              <Input
+                type="text"
+                placeholder="Nome do Bebê"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-2 border rounded-md mb-4"
+              />
+            </div>
+
+            <div
+              {...getRootProps()}
+              className="w-full p-4 border-2 border-dashed rounded-md mb-4 cursor-pointer"
+            >
+              <input {...getInputProps()} />
+              {image ? (
+                <div className="flex justify-center mb-2">
+                  <img
+                    src={image}
+                    alt="Foto do Bebê"
+                    className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
+                  />
+                </div>
+              ) : (
+                <p>Arraste e solte a foto do bebê aqui, ou clique para selecionar.</p>
+              )}
+            </div>
+
+            <Input
+              type="text"
+              placeholder="DD/MM/AAAA"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="w-full p-2 border rounded-md mb-4"
+            />
+
+            <Button className="mt-4 w-full bg-blue-500 text-white" onClick={calculate}>
+              Calcular Idade
+            </Button>
+
+            {result && (
+              <pre className="mt-4 text-md font-medium whitespace-pre-wrap text-left bg-white/70 p-2 rounded-md">
+                {result}
+              </pre>
             )}
 
-            {result && <p className="text-lg font-medium mb-4">{result}</p>}
-          </div>
+            <div className="mt-4">
+              <label className="mr-2">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="male"
+                  checked={gender === "male"}
+                  onChange={() => setGender("male")}
+                />
+                Menino
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="gender"
+                  value="female"
+                  checked={gender === "female"}
+                  onChange={() => setGender("female")}
+                />
+                Menina
+              </label>
+            </div>
 
-          <Input
-            type="text"
-            placeholder="Nome do Bebê"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded-md mb-4"
-          />
-
-          <div
-            {...getRootProps()}
-            className="w-full p-4 border-2 border-dashed rounded-md mb-4 cursor-pointer bg-white"
-          >
-            <input {...getInputProps()} />
-            <p className="text-gray-600">
-              Arraste e solte a foto do bebê aqui, ou clique para selecionar.
-            </p>
-          </div>
-
-          <Input
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full p-2 border rounded-md mb-4"
-          />
-
-          <Button className="mt-4 w-full bg-blue-500 text-white" onClick={calculate}>
-            Calcular Idade
-          </Button>
-
-          {/* Botão para baixar cartão comemorativo */}
-          {name && result && image && (
-            <Button
-              onClick={downloadCard}
-              className="mt-4 w-full bg-green-500 text-white"
-            >
-              Baixar Cartão Comemorativo
+            <Button className="mt-6 w-full bg-green-500 text-white" onClick={exportCard}>
+              Exportar Cartão como Imagem
             </Button>
-          )}
-
-          <div className="mt-4 flex justify-center space-x-4">
-            <label>
-              <input
-                type="radio"
-                name="gender"
-                value="male"
-                checked={gender === "male"}
-                onChange={() => setGender("male")}
-              />
-              <span className="ml-1">Menino</span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="gender"
-                value="female"
-                checked={gender === "female"}
-                onChange={() => setGender("female")}
-              />
-              <span className="ml-1">Menina</span>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
