@@ -15,39 +15,20 @@ import {
 } from "date-fns";
 import { useDropzone } from "react-dropzone";
 import html2canvas from "html2canvas";
-import { Calendar } from "@/components/ui/calendar";
-import { ptBR } from "date-fns/locale";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "@radix-ui/react-icons";
-import { cn } from "@/lib/utils";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { FaRedo } from 'react-icons/fa';
 
 export default function Home() {
-  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [result, setResult] = useState("");
   const [name, setName] = useState("");
   const [image, setImage] = useState<any>(null);
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedColor, setSelectedColor] = useState("default");
+  const [isCalculating, setIsCalculating] = useState(false);
   const cardRef = useRef(null);
-
-  const funMessages = [
-    "Cada risada é um pedacinho do céu!",
-    "Seu sorriso ilumina o mundo!",
-    "Tempo voa com tanta fofura!",
-    "Cada segundo é um presente com você!"
-  ];
-
-  const faithMessages = [
-    "Presente de Deus 💖",
-    "Deus abençoe cada passo!",
-    "Crescendo sob o olhar do Senhor.",
-    "Pequeno milagre em nossos braços."
-  ];
-
-  const allMessages = [...funMessages, ...faithMessages];
-
-  const randomMessage = () =>
-    allMessages[Math.floor(Math.random() * allMessages.length)];
 
   const onDrop = (acceptedFiles: any) => {
     setImage(URL.createObjectURL(acceptedFiles[0]));
@@ -60,17 +41,23 @@ export default function Home() {
     },
   });
 
-  function calculate() {
-    if (!birthDate) return;
+  const themeColors = {
+    default: "bg-blue-100 border-blue-400",
+    pink: "bg-pink-100 border-pink-400",
+    green: "bg-green-100 border-green-400",
+  };
 
+  function calculate() {
+    setIsCalculating(true);
+    const date = parse(birthDate ? birthDate.toString() : '', "dd/MM/yyyy", new Date());
     const now = new Date();
-    const days = differenceInDays(now, birthDate);
+    const days = differenceInDays(now, date);
     const weeks = Math.floor(days / 7);
     const months = Math.floor(days / 30.44);
-    const hours = differenceInHours(now, birthDate);
-    const minutes = differenceInMinutes(now, birthDate);
+    const hours = differenceInHours(now, date);
+    const minutes = differenceInMinutes(now, date);
 
-    const firstBirthday = addYears(birthDate, 1);
+    const firstBirthday = addYears(date, 1);
     const timeToOneYearMs = differenceInMilliseconds(firstBirthday, now);
     const timeToOneYear = new Date(timeToOneYearMs);
 
@@ -79,7 +66,7 @@ export default function Home() {
     setResult(
       `Idade: ${days} dias, ${weeks} semanas, ${months} meses, ${hours} horas, ${minutes} minutos.\n⏳ ${timeLeft}`
     );
-    setMessageIndex(Math.floor(Math.random() * allMessages.length));
+    setIsCalculating(false);
   }
 
   function exportCard() {
@@ -93,144 +80,145 @@ export default function Home() {
   }
 
   function generateNewMessage() {
-    let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * allMessages.length);
-    } while (newIndex === messageIndex);
-    setMessageIndex(newIndex);
+    setResult("");
+    setName("");
+    setBirthDate(null);
+    setImage(null);
   }
 
   return (
-    <main
-      className={`flex min-h-screen items-center justify-center p-4 relative overflow-hidden ${
-        gender === "female" ? "bg-pink-100" : "bg-blue-100"
-      }`}
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[length:20px_20px] opacity-20 z-0" />
-      <div className="relative z-10" ref={cardRef}>
-        <Card
-          className={`max-w-md w-full text-center shadow-2xl border-4 p-4 rounded-3xl transition-all duration-300 ${
-            gender === "female" ? "border-pink-400 shadow-pink-300" : "border-blue-400 shadow-blue-300"
-          } bg-white/80 backdrop-blur`}
-        >
-          <CardContent>
-            <h1 className="text-3xl font-bold mb-2">
-              {gender === "female" ? "Idade da Bebê 💖👧" : "Idade do Bebê 💙👦"}
-            </h1>
+    <div className={isDarkMode ? 'dark' : ''}>
+      <button
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        className="fixed top-4 right-4 bg-gray-800 text-white p-2 rounded-full"
+      >
+        {isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
+      </button>
 
-            {name && (
-              <p className="text-xl font-semibold mb-2">
-                {name} {gender === "female" ? "🧸" : "🍼"}
-              </p>
-            )}
+      <main
+        className={`flex min-h-screen items-center justify-center p-4 relative overflow-hidden ${
+          gender === "female" ? "bg-pink-100" : "bg-blue-100"
+        }`}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[length:20px_20px] opacity-20 z-0" />
+        <div className="relative z-10" ref={cardRef}>
+          <Card
+            className={`max-w-md w-full text-center shadow-2xl border-4 p-4 rounded-3xl transition-all duration-300 ${
+              gender === "female" ? "border-pink-400 shadow-pink-300" : "border-blue-400 shadow-blue-300"
+            } bg-white/80 backdrop-blur ${themeColors[selectedColor]}`}
+          >
+            <CardContent>
+              <h1 className="text-3xl font-bold mb-2">
+                {gender === "female" ? "Idade da Bebê 💖👧" : "Idade do Bebê 💙👦"}
+              </h1>
 
-            {result && (
-              <p className="text-base italic text-gray-700 mb-4">
-                “{allMessages[messageIndex]}”
-              </p>
-            )}
-
-            <div className="mb-4">
-              <Input
-                type="text"
-                placeholder="Nome do Bebê"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full p-2 border rounded-md mb-4"
-              />
-            </div>
-
-            <div
-              {...getRootProps()}
-              className="w-full p-4 border-2 border-dashed rounded-md mb-4 cursor-pointer"
-            >
-              <input {...getInputProps()} />
-              {image ? (
-                <div className="flex justify-center mb-2">
-                  <img
-                    src={image}
-                    alt="Foto do Bebê"
-                    className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
-                  />
-                </div>
-              ) : (
-                <p>Arraste e solte a foto do bebê aqui, ou clique para selecionar.</p>
+              {name && (
+                <p className="text-xl font-semibold mb-4">
+                  {name} {gender === "female" ? "🧸" : "🍼"}
+                </p>
               )}
-            </div>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !birthDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, "dd/MM/yyyy") : "Data de nascimento"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={birthDate}
-                  onSelect={setBirthDate}
-                  locale={ptBR}
-                  initialFocus
+              <div className="mb-4">
+                <Input
+                  type="text"
+                  placeholder="Nome do Bebê"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-2 border rounded-md mb-4"
                 />
-              </PopoverContent>
-            </Popover>
+              </div>
 
-            <Button className="mt-4 w-full bg-blue-500 text-white" onClick={calculate}>
-              Calcular Idade
-            </Button>
+              <div
+                {...getRootProps()}
+                className="w-full p-4 border-2 border-dashed rounded-md mb-4 cursor-pointer"
+              >
+                <input {...getInputProps()} />
+                {image ? (
+                  <div className="flex justify-center mb-2">
+                    <img
+                      src={image}
+                      alt="Foto do Bebê"
+                      className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
+                    />
+                  </div>
+                ) : (
+                  <p>Arraste e solte a foto do bebê aqui, ou clique para selecionar.</p>
+                )}
+              </div>
 
-            {result && (
-              <>
+              <div className="mb-4">
+                <DatePicker
+                  selected={birthDate}
+                  onChange={(date: Date) => setBirthDate(date)}
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full p-2 border rounded-md"
+                />
+              </div>
+
+              <Button
+                className={`mt-4 w-full ${isCalculating ? 'bg-green-500' : 'bg-blue-500'} text-white`}
+                onClick={calculate}
+                disabled={isCalculating}
+              >
+                {isCalculating ? 'Calculando...' : 'Calcular Idade'}
+              </Button>
+
+              {result && (
                 <pre className="mt-4 text-md font-medium whitespace-pre-wrap text-left bg-white/70 p-2 rounded-md">
                   {result}
                 </pre>
+              )}
 
-                <Button
-                  variant="outline"
-                  className="mt-2 w-full"
-                  onClick={generateNewMessage}
-                >
-                  Nova Mensagem ✨
-                </Button>
-              </>
-            )}
+              <div className="mt-4">
+                <label className="mr-2">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="male"
+                    checked={gender === "male"}
+                    onChange={() => setGender("male")}
+                  />
+                  Menino
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="female"
+                    checked={gender === "female"}
+                    onChange={() => setGender("female")}
+                  />
+                  Menina
+                </label>
+              </div>
 
-            <div className="mt-4 space-x-4">
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  checked={gender === "male"}
-                  onChange={() => setGender("male")}
-                />{" "}
-                Menino
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  checked={gender === "female"}
-                  onChange={() => setGender("female")}
-                />{" "}
-                Menina
-              </label>
-            </div>
+              <Button
+                className="mt-6 w-full bg-yellow-500 text-white"
+                onClick={generateNewMessage}
+              >
+                Gerar Nova Mensagem
+              </Button>
 
-            <Button className="mt-6 w-full bg-green-500 text-white" onClick={exportCard}>
-              Exportar Cartão como Imagem
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+              <Button
+                className="mt-6 w-full bg-green-500 text-white"
+                onClick={exportCard}
+              >
+                Exportar Cartão como Imagem
+              </Button>
+
+              <select
+                className="mt-4 w-full p-2 border rounded-md"
+                onChange={(e) => setSelectedColor(e.target.value)}
+                value={selectedColor}
+              >
+                <option value="default">Azul</option>
+                <option value="pink">Rosa</option>
+                <option value="green">Verde</option>
+              </select>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
   );
 }
