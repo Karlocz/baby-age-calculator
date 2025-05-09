@@ -18,7 +18,7 @@ export default function Home() {
   const [image, setImage] = useState<any>(null);
   const [gender, setGender] = useState<"male" | "female">("male");
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [selectedColor, setSelectedColor] = useState("default");
+  const [selectedColor, setSelectedColor] = useState<"default" | "pink" | "green">("default");
   const [isCalculating, setIsCalculating] = useState(false);
   const cardRef = useRef(null);
 
@@ -33,25 +33,17 @@ export default function Home() {
     },
   });
 
-  // Defina as cores válidas
-const validColors = ["default", "pink", "green"] as const;
-type Color = typeof validColors[number];  // O tipo "Color" agora só pode ser "default", "pink" ou "green"
+  // Defina o objeto de cores
+  const themeColors: Record<string, string> = {
+    default: "#ffffff",  // Exemplo de cor
+    pink: "#ff69b4",
+    green: "#32cd32",
+  };
 
-// Defina a cor selecionada, com um valor que será uma chave válida
-let selectedColor: Color = "default";  // Pode ser "default", "pink", ou "green"
+  // Use selectedColor com segurança
+  const color = themeColors[selectedColor];
 
-// Defina o objeto de cores
-const themeColors: Record<Color, string> = {
-  default: "#ffffff",  // Exemplo de cor
-  pink: "#ff69b4",
-  green: "#32cd32",
-};
-
-// Use selectedColor com segurança
-const color = themeColors[selectedColor];
-
-// Agora, quando você usar selectedColor, o TypeScript garantirá que o valor seja válido
-console.log(color);  // A cor correspondente será retornada
+  console.log(color);  // A cor correspondente será retornada
 
   function calculate() {
     setIsCalculating(true);
@@ -111,7 +103,7 @@ console.log(color);  // A cor correspondente será retornada
           <Card
             className={`max-w-md w-full text-center shadow-2xl border-4 p-4 rounded-3xl transition-all duration-300 ${
               gender === "female" ? "border-pink-400 shadow-pink-300" : "border-blue-400 shadow-blue-300"
-            } bg-white/80 backdrop-blur ${themeColors[selectedColor]}`}
+            } bg-white/80 backdrop-blur ${color}`}
           >
             <CardContent>
               <h1 className="text-3xl font-bold mb-2">
@@ -214,7 +206,7 @@ console.log(color);  // A cor correspondente será retornada
 
               <select
                 className="mt-4 w-full p-2 border rounded-md"
-                onChange={(e) => setSelectedColor(e.target.value)}
+                onChange={(e) => setSelectedColor(e.target.value as "default" | "pink" | "green")}
                 value={selectedColor}
               >
                 <option value="default">Azul</option>
