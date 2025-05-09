@@ -11,8 +11,9 @@ import {
   differenceInHours,
   differenceInMinutes,
   differenceInMilliseconds,
-  addYears
-} from "date-fns"; // Ensure this import is here
+  addYears,
+  isValid
+} from "date-fns";
 import { useDropzone } from "react-dropzone";
 import html2canvas from "html2canvas";
 
@@ -20,21 +21,29 @@ export default function Home() {
   const [birthDate, setBirthDate] = useState("");
   const [result, setResult] = useState("");
   const [name, setName] = useState("");
-  const [image, setImage] = useState<any>(null);
+  const [image, setImage] = useState<string | null>(null);
   const [gender, setGender] = useState<"male" | "female">("male");
   const cardRef = useRef(null);
 
-  const onDrop = (acceptedFiles: any) => {
-    setImage(URL.createObjectURL(acceptedFiles[0]));
+  const onDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles && acceptedFiles[0]) {
+      setImage(URL.createObjectURL(acceptedFiles[0]));
+    }
   };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: "image/*",
+    accept: { "image/*": [] },
   });
 
   function calculate() {
-    const date = parse(birthDate, "dd/MM/yyyy", new Date());
+    const date = parse(birthDate, "yyyy-MM-dd", new Date());
+
+    if (!isValid(date)) {
+      setResult("❌ Data inválida. Use o formato AAAA-MM-DD.");
+      return;
+    }
+
     const now = new Date();
     const days = differenceInDays(now, date);
     const weeks = Math.floor(days / 7);
@@ -43,7 +52,7 @@ export default function Home() {
     const minutes = differenceInMinutes(now, date);
 
     const firstBirthday = addYears(date, 1);
-    const timeToOneYearMs = differenceInMilliseconds(firstBirthday, now); // Corrected
+    const timeToOneYearMs = differenceInMilliseconds(firstBirthday, now);
     const timeToOneYear = new Date(timeToOneYearMs);
 
     const timeLeft = `${Math.floor(timeToOneYearMs / (1000 * 60 * 60 * 24))} dias, ${timeToOneYear.getUTCHours()} horas e ${timeToOneYear.getUTCMinutes()} minutos para 1º aniversário.`;
@@ -106,7 +115,7 @@ export default function Home() {
                 <div className="flex justify-center mb-2">
                   <img
                     src={image}
-                    alt="Foto do Bebê"
+                    alt={`Foto de ${name || "bebê"}`}
                     className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
                   />
                 </div>
@@ -116,8 +125,8 @@ export default function Home() {
             </div>
 
             <Input
-              type="text"
-              placeholder="DD/MM/AAAA"
+              type="date"
+              placeholder="Data de Nascimento"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
               className="w-full p-2 border rounded-md mb-4"
@@ -133,8 +142,8 @@ export default function Home() {
               </pre>
             )}
 
-            <div className="mt-4">
-              <label className="mr-2">
+            <div className="mt-4 space-x-4">
+              <label className="inline-flex items-center gap-1">
                 <input
                   type="radio"
                   name="gender"
@@ -144,7 +153,7 @@ export default function Home() {
                 />
                 Menino
               </label>
-              <label>
+              <label className="inline-flex items-center gap-1">
                 <input
                   type="radio"
                   name="gender"
